@@ -39,3 +39,5 @@ Before starting the tutorial, you may first want to review the <a href="/documen
 ### Choose a Special Topic:
 
 [CronTrigger Tutorial](crontrigger.html)
+
+[RRuleTrigger Tutorial](rruletrigger.html)

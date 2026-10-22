@@ -233,6 +233,22 @@ RRuleTrigger trigger = newTrigger()
     <tt>examples/src/main/java/org/quartz/examples/example16/RRuleTriggerExample.java</tt>
     (<tt>../gradlew :examples:runExample16</tt>).
 
++ RRULE triggers can also be declared in XML scheduling data (e.g. for the
+    <tt>XMLSchedulingDataProcessorPlugin</tt>), with an <tt>&lt;rrule&gt;</tt> trigger element:
+
+<pre>
+&lt;trigger&gt;
+    &lt;rrule&gt;
+        &lt;name&gt;weekdays_at_ten&lt;/name&gt;
+        &lt;job-name&gt;job1&lt;/job-name&gt;
+        &lt;start-time&gt;2026-01-05T09:00:00Z&lt;/start-time&gt;
+        &lt;misfire-instruction&gt;MISFIRE_INSTRUCTION_DO_NOTHING&lt;/misfire-instruction&gt;
+        &lt;rrule-expression&gt;FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=10;BYMINUTE=0;BYSECOND=0&lt;/rrule-expression&gt;
+        &lt;time-zone&gt;Europe/Prague&lt;/time-zone&gt;
+    &lt;/rrule&gt;
+&lt;/trigger&gt;
+</pre>
+
 + **Upgrading a JDBC JobStore schema:** RRULE triggers are stored in a new table,
     <tt>QRTZ_RRULE_TRIGGERS</tt>. Liquibase users get it automatically (changeSet
     <tt>quartz-rrule-triggers</tt>). Otherwise, before scheduling the first RRULE trigger, create it with the

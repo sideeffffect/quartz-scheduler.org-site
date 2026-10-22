@@ -51,7 +51,9 @@ to the corresponding component of the trigger's start-time.
         <tr>
             <td><tt>UNTIL</tt></td>
             <td>NO</td>
-            <td>An (inclusive) end date-time, e.g. <tt>20261231T120000Z</tt>. Mutually exclusive with <tt>COUNT</tt>.</td>
+            <td>An (inclusive) end date-time, e.g. <tt>20261231T120000Z</tt>. Without the trailing <tt>Z</tt> it is
+                read in the trigger's time zone; a date-only value (e.g. <tt>20261231</tt>) includes the whole day.
+                Mutually exclusive with <tt>COUNT</tt>.</td>
         </tr>
         <tr>
             <td><tt>WKST</tt></td>
@@ -218,12 +220,38 @@ RRuleTrigger trigger = newTrigger()
 + <tt>COUNT</tt> counts the number of occurrences that actually fire; <tt>UNTIL</tt> is an inclusive upper
     bound. The two are mutually exclusive.
 
-+ As with cron, be careful when firing between the hours of the morning when "daylight savings" changes
-    occur in your locale, as the time shift can cause a skip or a repeat.
++ Rule parts that RFC&nbsp;5545 marks as not applicable to a frequency (e.g. <tt>BYMONTHDAY</tt> with
+    <tt>FREQ=WEEKLY</tt>, or <tt>BYYEARDAY</tt> with <tt>FREQ=MONTHLY</tt>) are rejected rather than ignored.
+
++ Daylight-saving time: <tt>DAILY</tt> and coarser frequencies keep the local time of day. A local time that
+    does not exist (in the spring gap) is shifted forward by the length of the gap; a local time that occurs
+    twice (in the autumn overlap) fires once, at the first occurrence. <tt>HOURLY</tt>, <tt>MINUTELY</tt> and
+    <tt>SECONDLY</tt> step in elapsed time, so e.g. <tt>FREQ=HOURLY</tt> fires every 60 minutes through a
+    transition.
 
 + A runnable example is provided in the Quartz distribution at
     <tt>examples/src/main/java/org/quartz/examples/example16/RRuleTriggerExample.java</tt>
     (<tt>../gradlew :examples:runExample16</tt>).
+
++ **Upgrading a JDBC JobStore schema:** RRULE triggers are stored in a new table,
+    <tt>QRTZ_RRULE_TRIGGERS</tt>. Liquibase users get it automatically (changeSet
+    <tt>quartz-rrule-triggers</tt>). Otherwise, before scheduling the first RRULE trigger, create it with the
+    <tt>create table qrtz_rrule_triggers</tt> statement (and its indexes or constraints, if any) from the
+    <tt>tables_&lt;database&gt;.sql</tt> script for your database, e.g. for PostgreSQL:
+
+<pre>
+CREATE TABLE QRTZ_RRULE_TRIGGERS
+(
+  SCHED_NAME      VARCHAR(120) NOT NULL,
+  TRIGGER_NAME    VARCHAR(200) NOT NULL,
+  TRIGGER_GROUP   VARCHAR(200) NOT NULL,
+  RRULE_EXPRESSION VARCHAR(512) NOT NULL,
+  TIME_ZONE_ID    VARCHAR(80),
+  PRIMARY KEY (SCHED_NAME, TRIGGER_NAME, TRIGGER_GROUP),
+  FOREIGN KEY (SCHED_NAME, TRIGGER_NAME, TRIGGER_GROUP)
+  REFERENCES QRTZ_TRIGGERS (SCHED_NAME, TRIGGER_NAME, TRIGGER_GROUP)
+);
+</pre>
 
 + For the full specification of the rule parts and their interactions, see
     <a href="https://datatracker.ietf.org/doc/html/rfc5545#section-3.3.10">RFC&nbsp;5545 &sect;3.3.10</a>.
